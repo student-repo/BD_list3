@@ -149,6 +149,26 @@ update concert set ClubName=new.ClubName, TeamName=new.TeamName, Date=new.Date w
 delimiter ;
 
 
+DELIMITER $$
+
+CREATE TRIGGER delete_concerts
+ after delete ON concerts FOR EACH ROW
+ BEGIN
+
+delete from concert where ClubName=old.ClubName and TeamName=old.TeamName and Date=old.Date;
+
+  IF (SELECT COUNT(*) FROM concert
+       WHERE ClubName=old.ClubName
+       and TeamName=old.TeamName
+      and Date=old.Date) <= 0
+  THEN
+delete from club where Name=old.ClubName;
+delete from team where Name=old.TeamName;
+  end if;
+ END $$
+delimiter ;
+
+
 -- http://www.mysqltutorial.org/mysql-error-handling-in-stored-procedures/
 
 -- http://dev.mysql.com/doc/refman/5.7/en/declare-handler.html

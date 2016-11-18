@@ -47,7 +47,7 @@ end $$
 delimiter ;
 
 
--- Task II
+-- Task II A
 
 create table if not exists club(Name varchar(30), Address varchar(30));
 
@@ -56,7 +56,7 @@ create table if not exists team(Name varchar(30), MembersQuantity int(5));
 -- unique columne
 -- create table if not exists concerts(ClubName varchar(30), ClubAddress varchar(30), TeamName varchar(30), TeamMembersQuantity varchar(30), Date datetime, unique(ClubName, ClubAddress, TeamName, TeamMembersQuantity, Date));
 
-create table if not exists concerts(ClubName varchar(30), ClubAddress varchar(30), TeamName varchar(30), TeamMembersQuantity varchar(30), Date datetime);
+create table if not exists concerts(ClubName varchar(30), ClubAddress varchar(30), TeamName varchar(30), TeamMembersQuantity int(5), Date datetime);
 
 create table if not exists concert(ClubName varchar(30), TeamName varchar(30), Date datetime);
 -- without null values
@@ -131,6 +131,23 @@ insert into concerts (ClubName, ClubAddress, TeamName, TeamMembersQuantity, Date
           END IF;
      END $$
   delimiter ;
+
+
+-- Task II B
+
+DELIMITER $$
+
+CREATE TRIGGER update_concerts
+ after update ON concerts FOR EACH ROW
+ BEGIN
+
+update club set Name=new.ClubName, Address=new.ClubAddress where Name=old.ClubName and Address=old.ClubAddress;
+update team set Name=new.TeamName, MembersQuantity=new.TeamMembersQuantity where Name=old.TeamName and MembersQuantity=old.TeamMembersQuantity;
+update concert set ClubName=new.ClubName, TeamName=new.TeamName, Date=new.Date where ClubName=old.ClubName and TeamName=old.TeamName and Date=old.Date;
+
+ END $$
+delimiter ;
+
 
 -- http://www.mysqltutorial.org/mysql-error-handling-in-stored-procedures/
 

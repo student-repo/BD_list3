@@ -74,7 +74,7 @@ insert into concert(ClubName, TeamName, Date) values ("ClubName1", "TeamName2", 
 
 insert into concerts (ClubName, ClubAddress, TeamName, TeamMembersQuantity, Date) select club.Name, club.Address, team.Name, MembersQuantity, Date from concert inner join club on concert.ClubName=club.Name inner join team on concert.TeamName=team.Name;
 
-  -- insert into concerts(ClubName, ClubAddress, TeamName, TeamMembersQuantity, Date) values ("ClubName2", "Address2", "TeamName3", 3, date("2015-03-11"));
+    -- insert into concerts(ClubName, ClubAddress, TeamName, TeamMembersQuantity, Date) values ("ClubName2", "Address2", "TeamName3", 3, date("2015-03-11"));
 
 
     DELIMITER $$
@@ -176,3 +176,44 @@ delimiter ;
 -- http://dev.mysql.com/doc/refman/5.7/en/error-messages-server.html
 
 -- https://dev.mysql.com/doc/refman/5.5/en/signal.html#signal-effects
+
+
+
+-- Task 3
+
+-- http://webcheatsheet.com/sql/mysql_backup_restore.php
+
+
+Czesc I (Backup and Restoring)
+
+Backup czyli tworzenie kopii zapasowych to jeden ze skutecznych sposobow na zabezpieczenie przed utrata danych.
+Pracujac na bazach danych niezmiernie latwo jest popelnic jakis blad ktory skutecznie uszkodzi lub wyczysci
+nasza baze ktora czesto zawiera cenne informacje. W zwiazku z tym warto co jakis czas zrobic tak zwany backup
+ktory zapusuje stan naszej bazy danych i jesli cos zepsujemy to bardzo latwo przywrocic poprzedni stan.
+MySql zapewnia szereg przydatnych funkcjonalnosci wspierajacych szybkie tworzenie kopii zapasowych.
+Wykorzystuje sie do tego komende $mysqldump -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych >
+sciezka_i_nazwa_pliku_w_ktorym_bedzie_zapisany_backup (w moim przypadku pelna komenda bedzie miala posatac
+np.  $mysqldump -u root -p northwind > ~/Deskop/northwind_backup.sql ). Mysql zapewnia rowniez szereg
+przydanych rozszerzen takich jak: robienie backupa kilku baz danych na raz do jednego pliku (wystarczy po
+-p dopisac --databases nazwa_bazy_danych_1 nazwa_bazydanych_2 itd.) lub stworzenie kopii wszystkich baz danych
+(po -p dopisujemy --all-databases). Jesli dzialamy na duzych bazach dabych bardzo przydatna funkcjonalnoscia
+jest robienie kopii zapasowych od razu skompresowanych, mozna to zrobic za pomoca potoku $mysqldump -u
+nazwa_uzytkownika_bazy_dancyh -p  nazwa_bazy_danych | gzip -9 > sciezka_i_nazwa_pliku. Inne rozszerzenia
+to np. -add-drop-table ktory wymusza przed stworzeniem tablicy usuniecie jej jesli tablica o takiej nazwie
+instnieje oraz --no-data krorego backup przywraca jedynie struktury tablic pomijajac ich zawartosc. Pliki
+w ktorych zapisalismy backup to zwykle pliki z rozszerzeniem .sql ktre zawieraja komendy aby stworzyc na nowo
+nasza baze danych.
+(gunzip < backupfile.sql.gz | mysql -u root -p northwind
+  mysqldump -u root -p northwind | gzip -9 > backupfile.sql.gz
+   mysql -u root -p foo < backupfile.sql
+   mysqldump -u root -p --all-databases > alldb_backup.sql
+)
+
+
+Restoring czyli przywrocenie stanu bazy danych za pomoca kopii zapasowej. Jest to bardzo prosta i intuicyjna
+czynnosc. Pomocna jest tu komenda $ mysql -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_do_ktorej_chcemy_przywrocic_dane
+ < nazwa_pliku_w_ktorym_znajduje_sie_backup (pelna komenda np.  $ mysql -u root -p northwind < backupfile.sql ). Aby
+ przywrocic backup z zapakowanego pliku mozna to zrobic bez koniecznosci jego rozpakowywania komenda $ gunzip < nazwa_zapakowanej_kopii_zapasowej.sql.gz
+  | mysql -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych_do_ktorej_zostania_przywrocone_dane. Przywrocic dane z
+  kopi zapasowej mozna rowniez z poziomu MySqla, deklarujac uzywanie bazy danych w ktorej chcemy zapisac backup
+  oraz wykoanie komendy mysql> source sciezka_do_pliku_z_kopia_zapasowa.sql

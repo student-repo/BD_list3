@@ -183,37 +183,103 @@ delimiter ;
 
 -- http://webcheatsheet.com/sql/mysql_backup_restore.php
 
+--
+-- Czesc I (Backup and Restoring)
+--
+-- Backup czyli tworzenie kopii zapasowych to jeden ze skutecznych sposobow na zabezpieczenie przed utrata danych.
+-- Pracujac na bazach danych niezmiernie latwo jest popelnic jakis blad ktory skutecznie uszkodzi lub wyczysci
+-- nasza baze ktora czesto zawiera cenne informacje. W zwiazku z tym warto co jakis czas zrobic tak zwany backup
+-- ktory zapusuje stan naszej bazy danych i jesli cos zepsujemy to bardzo latwo przywrocic poprzedni stan.
+-- MySql zapewnia szereg przydatnych funkcjonalnosci wspierajacych szybkie tworzenie kopii zapasowych.
+-- Wykorzystuje sie do tego komende $mysqldump -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych >
+-- sciezka_i_nazwa_pliku_w_ktorym_bedzie_zapisany_backup (w moim przypadku pelna komenda bedzie miala posatac
+-- np.  $mysqldump -u root -p northwind > ~/Deskop/northwind_backup.sql ). Mysql zapewnia rowniez szereg
+-- przydanych rozszerzen takich jak: robienie backupa kilku baz danych na raz do jednego pliku (wystarczy po
+-- -p dopisac --databases nazwa_bazy_danych_1 nazwa_bazydanych_2 itd.) lub stworzenie kopii wszystkich baz danych
+-- (po -p dopisujemy --all-databases). Jesli dzialamy na duzych bazach dabych bardzo przydatna funkcjonalnoscia
+-- jest robienie kopii zapasowych od razu skompresowanych, mozna to zrobic za pomoca potoku $mysqldump -u
+-- nazwa_uzytkownika_bazy_dancyh -p  nazwa_bazy_danych | gzip -9 > sciezka_i_nazwa_pliku. Inne rozszerzenia
+-- to np. -add-drop-table ktory wymusza przed stworzeniem tablicy usuniecie jej jesli tablica o takiej nazwie
+-- instnieje oraz --no-data krorego backup przywraca jedynie struktury tablic pomijajac ich zawartosc. Pliki
+-- w ktorych zapisalismy backup to zwykle pliki z rozszerzeniem .sql ktre zawieraja komendy aby stworzyc na nowo
+-- nasza baze danych.
+-- (gunzip < backupfile.sql.gz | mysql -u root -p northwind
+--   mysqldump -u root -p northwind | gzip -9 > backupfile.sql.gz
+--    mysql -u root -p foo < backupfile.sql
+--    mysqldump -u root -p --all-databases > alldb_backup.sql
+-- )
+--
+--
+-- Restoring czyli przywrocenie stanu bazy danych za pomoca kopii zapasowej. Jest to bardzo prosta i intuicyjna
+-- czynnosc. Pomocna jest tu komenda $ mysql -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_do_ktorej_chcemy_przywrocic_dane
+--  < nazwa_pliku_w_ktorym_znajduje_sie_backup (pelna komenda np.  $ mysql -u root -p northwind < backupfile.sql ). Aby
+--  przywrocic backup z zapakowanego pliku mozna to zrobic bez koniecznosci jego rozpakowywania komenda $ gunzip < nazwa_zapakowanej_kopii_zapasowej.sql.gz
+--   | mysql -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych_do_ktorej_zostania_przywrocone_dane. Przywrocic dane z
+--   kopi zapasowej mozna rowniez z poziomu MySqla, deklarujac uzywanie bazy danych w ktorej chcemy zapisac backup
+--   oraz wykoanie komendy mysql> source sciezka_do_pliku_z_kopia_zapasowa.sql
+--
+--
+--
+-- Czesc II (Replication)
+--
+-- Replication w kontekscie MySqla oznacza proces ktory pozwala na latwe utrzymywanie kopii bazy danych ktore sa
+-- automatycznie kopiowane z servera master do jednego lub wielu serverow slave (niewolnik). Wszystkie aktualizacje
+-- na serverze master sa natychmiastowo replikowane do servera slave. Koncepcja replication nie uchroni nas przed
+-- wieloma zagrozeniami utraty bazy danych takich jak np przypadkowe usuniecie bazy poniewaz jesli usuniemy baze na
+-- masterze to automatycznie ta baza zostanie usunieta na serverze slave. Replication chroni nas jednak skutecznie
+-- przed awariami sprzetu komputerowego.
+--
 
-Czesc I (Backup and Restoring)
-
-Backup czyli tworzenie kopii zapasowych to jeden ze skutecznych sposobow na zabezpieczenie przed utrata danych.
-Pracujac na bazach danych niezmiernie latwo jest popelnic jakis blad ktory skutecznie uszkodzi lub wyczysci
-nasza baze ktora czesto zawiera cenne informacje. W zwiazku z tym warto co jakis czas zrobic tak zwany backup
-ktory zapusuje stan naszej bazy danych i jesli cos zepsujemy to bardzo latwo przywrocic poprzedni stan.
-MySql zapewnia szereg przydatnych funkcjonalnosci wspierajacych szybkie tworzenie kopii zapasowych.
-Wykorzystuje sie do tego komende $mysqldump -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych >
-sciezka_i_nazwa_pliku_w_ktorym_bedzie_zapisany_backup (w moim przypadku pelna komenda bedzie miala posatac
-np.  $mysqldump -u root -p northwind > ~/Deskop/northwind_backup.sql ). Mysql zapewnia rowniez szereg
-przydanych rozszerzen takich jak: robienie backupa kilku baz danych na raz do jednego pliku (wystarczy po
--p dopisac --databases nazwa_bazy_danych_1 nazwa_bazydanych_2 itd.) lub stworzenie kopii wszystkich baz danych
-(po -p dopisujemy --all-databases). Jesli dzialamy na duzych bazach dabych bardzo przydatna funkcjonalnoscia
-jest robienie kopii zapasowych od razu skompresowanych, mozna to zrobic za pomoca potoku $mysqldump -u
-nazwa_uzytkownika_bazy_dancyh -p  nazwa_bazy_danych | gzip -9 > sciezka_i_nazwa_pliku. Inne rozszerzenia
-to np. -add-drop-table ktory wymusza przed stworzeniem tablicy usuniecie jej jesli tablica o takiej nazwie
-instnieje oraz --no-data krorego backup przywraca jedynie struktury tablic pomijajac ich zawartosc. Pliki
-w ktorych zapisalismy backup to zwykle pliki z rozszerzeniem .sql ktre zawieraja komendy aby stworzyc na nowo
-nasza baze danych.
-(gunzip < backupfile.sql.gz | mysql -u root -p northwind
-  mysqldump -u root -p northwind | gzip -9 > backupfile.sql.gz
-   mysql -u root -p foo < backupfile.sql
-   mysqldump -u root -p --all-databases > alldb_backup.sql
-)
 
 
-Restoring czyli przywrocenie stanu bazy danych za pomoca kopii zapasowej. Jest to bardzo prosta i intuicyjna
-czynnosc. Pomocna jest tu komenda $ mysql -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_do_ktorej_chcemy_przywrocic_dane
- < nazwa_pliku_w_ktorym_znajduje_sie_backup (pelna komenda np.  $ mysql -u root -p northwind < backupfile.sql ). Aby
- przywrocic backup z zapakowanego pliku mozna to zrobic bez koniecznosci jego rozpakowywania komenda $ gunzip < nazwa_zapakowanej_kopii_zapasowej.sql.gz
-  | mysql -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych_do_ktorej_zostania_przywrocone_dane. Przywrocic dane z
-  kopi zapasowej mozna rowniez z poziomu MySqla, deklarujac uzywanie bazy danych w ktorej chcemy zapisac backup
-  oraz wykoanie komendy mysql> source sciezka_do_pliku_z_kopia_zapasowa.sql
+-- docker pull percona
+--
+--
+-- sudo mkdir -p /opt/Docker/masterdb/data /opt/Docker/slavedb/data
+--
+--
+-- sudo mkdir -p /opt/Docker/masterdb/cnf /opt/Docker/slavedb/cnf
+--
+--
+-- sudo vi /opt/Docker/masterdb/cnf/config-file.cnf
+-- # Config Settings:
+-- [mysqld]
+-- server-id=1
+-- binlog_format=ROW
+-- log-bin
+--
+--
+-- sudo vi /opt/Docker/slavedb/cnf/config-file.cnf
+-- # Config Settings:
+-- [mysqld]
+-- server-id=2
+--
+--
+-- sudo docker run --name masterdb -v /opt/Docker/masterdb/cnf:/etc/mysql/conf.d -v /opt/Docker/masterdb/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=mysecretpass -d percona:5.6
+--
+--
+-- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"GRANT REPLICATION SLAVE ON *.* TO repl@'%' IDENTIFIED BY 'slavepass'"
+--
+--
+-- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -e"SHOW MASTER STATUS"
+--
+--
+-- sudo docker run --name slavedb -d -v /opt/Docker/slavedb/cnf:/etc/mysql/conf.d -v /opt/Docker/slavedb/data:/var/lib/mysql --link masterdb:mysql -e MYSQL_ROOT_PASSWORD=mysecretpass -d percona:5.6
+--
+--
+--  sudo docker exec -ti slavedb 'mysql' -uroot -pmysecretpass -e'change master to master_host="mysql",master_user="repl",master_password="slavepass",master_log_file="mysqld-bin.000004",master_log_pos=310;"' -vvv
+--
+--
+--  sudo docker exec -ti slavedb 'mysql' -uroot -pmysecretpass -e"START SLAVE;" -vvv
+--
+--
+--  sudo docker exec -ti slavedb 'mysql' -uroot -pmysecretpass -e"SHOW SLAVE STATUS" -vvv
+
+-- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"create database example"
+-- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"create table example.dummy (id varchar(10))"
+-- sudo docker exec -ti slavedb 'mysql' -uroot -pmysecretpass -e"show tables in example" -vvv
+-- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"show tables in example;";
+
+
+
+-- https://www.percona.com/blog/2016/03/30/docker-mysql-replication-101/

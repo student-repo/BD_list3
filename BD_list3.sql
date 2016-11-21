@@ -25,13 +25,14 @@ insert into sale(Goods, Month, Value) values ("Shoes", "January", 230),("Shoes",
 
 -- OK dynamic
 delimiter $$
-create procedure foo2()
+create procedure foo2(
+  in func varchar(30))
 begin
 SET @sql = NULL;
 SELECT
   GROUP_CONCAT(DISTINCT
     CONCAT(
-      'SUM(IF(Month = ''',
+      func,'(IF(Month = ''',
       Month,
       ''', Value, NULL)) AS ',
       Month

@@ -157,15 +157,30 @@ CREATE TRIGGER delete_concerts
  BEGIN
 
 delete from concert where ClubName=old.ClubName and TeamName=old.TeamName and Date=old.Date;
+--
+--   IF (SELECT COUNT(*) FROM concert
+--        WHERE ClubName=old.ClubName
+--        and TeamName=old.TeamName
+--       and Date=old.Date) <= 0
+--   THEN
+-- delete from club where Name=old.ClubName;
+-- delete from team where Name=old.TeamName;
+--   end if;
+
 
   IF (SELECT COUNT(*) FROM concert
-       WHERE ClubName=old.ClubName
-       and TeamName=old.TeamName
-      and Date=old.Date) <= 0
+       WHERE ClubName=old.ClubName) <= 0
   THEN
 delete from club where Name=old.ClubName;
-delete from team where Name=old.TeamName;
   end if;
+
+    IF (SELECT COUNT(*) FROM concert where
+     TeamName=old.TeamName) <= 0
+    THEN
+  delete from team where Name=old.TeamName;
+    end if;
+
+
  END $$
 delimiter ;
 
@@ -190,7 +205,7 @@ delimiter ;
 -- Backup czyli tworzenie kopii zapasowych to jeden ze skutecznych sposobow na zabezpieczenie przed utrata danych.
 -- Pracujac na bazach danych niezmiernie latwo jest popelnic jakis blad ktory skutecznie uszkodzi lub wyczysci
 -- nasza baze ktora czesto zawiera cenne informacje. W zwiazku z tym warto co jakis czas zrobic tak zwany backup
--- ktory zapusuje stan naszej bazy danych i jesli cos zepsujemy to bardzo latwo przywrocic poprzedni stan.
+-- ktory zapisuje stan naszej bazy danych i jesli cos zepsujemy to bardzo latwo przywrocic poprzedni stan.
 -- MySql zapewnia szereg przydatnych funkcjonalnosci wspierajacych szybkie tworzenie kopii zapasowych.
 -- Wykorzystuje sie do tego komende $mysqldump -u nazwa_uzytkownika_bazy_dancyh -p nazwa_bazy_danych >
 -- sciezka_i_nazwa_pliku_w_ktorym_bedzie_zapisany_backup (w moim przypadku pelna komenda bedzie miala posatac
@@ -276,10 +291,16 @@ delimiter ;
 --
 --  sudo docker exec -ti slavedb 'mysql' -uroot -pmysecretpass -e"SHOW SLAVE STATUS" -vvv
 
--- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"create database example"
+-- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"create database example2"
 -- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"create table example.dummy (id varchar(10))"
 -- sudo docker exec -ti slavedb 'mysql' -uroot -pmysecretpass -e"show tables in example" -vvv
 -- sudo docker exec -ti masterdb 'mysql' -uroot -pmysecretpass -vvv -e"show tables in example;";
+
+
+
+
+
+
 
 
 
